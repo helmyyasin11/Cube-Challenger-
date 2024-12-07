@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cube Challenge</title>
+    <style>
+        :root {
+            --primary-color: #3498db;
+            --secondary-color: #2ecc71;
+            --background-color: #ecf0f1;
+            --text-color: #2c3e50;
+            --error-color: #e74c3c;
+            --success-color: #27ae60;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            transition: all 0.3s ease;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            background-color: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            width: 100%;
+            max-width: 450px;
+            text-align: center;
+            transform: scale(0.9);
+            opacity: 0;
+            animation: fadeInScale 0.5s forwards;
+        }
+
+        @keyframes fadeInScale {
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        h1 {
+            color: var(--primary-color);
+            margin-bottom: 30px;
+            font-weight: 600;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: 2px solid var(--primary-color);
+            border-radius: 8px;
+            outline: none;
+            font-size: 16px;
+        }
+
+        button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            margin: 10px 5px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: background-color 0.3s, transform 0.2s;
+        }
+
+        button:hover {
+            background-color: var(--secondary-color);
+            transform: translateY(-3px);
+        }
+
+        #message, #scoreDisplay {
+            margin: 15px 0;
+            font-weight: bold;
+        }
+
+        .game-stats {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            align-items: center;
+        }
+
+        .difficulty-indicator {
+            background-color: var(--secondary-color);
+            color: white;
+            padding: 3px 8px;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        #correctAnswerDisplay {
+            font-size: 18px;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin: 15px 0;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .skip-button {
+            background-color: #f39c12;
+            color: white;
+        }
+
+        .skip-button:hover {
+            background-color: #d35400;
+            transform: translateY(-3px);
+        }
+
+        #gameInputContainer {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .difficulty-select {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .difficulty-select button {
+            background-color: #95a5a6;
+        }
+
+        .difficulty-select button:hover {
+            background-color: #7f8c8d;
+        }
+    </style>
+</head>
+<body>
+    <div class="container" id="loginContainer">
+        <h1>Cube Challenge Login</h1>
+        <input type="text" id="username" placeholder="Username" autocomplete="off">
+        <input type="password" id="password" placeholder="Password" autocomplete="off">
+        <button onclick="authenticate()">Login</button>
+        <div id="loginMessage"></div>
+    </div>
+
+    <div class="container" id="gameContainer" style="display:none;">
+        <h1>Cube Challenge</h1>
+        <div id="gameMenu">
+            <div>
+                <button onclick="prepareGameMode('cube')">Find Cube of a Number</button>
+                <button onclick="prepareGameMode('cubeRoot')">Find Cube Root of a Number</button>
+            </div>
+            <div class="difficulty-select" id="difficultySelect" style="display:none;">
+                <button onclick="startGame(1)">Easy (Level 1)</button>
+                <button onclick="startGame(2)">Medium (Level 2)</button>
+                <button onclick="startGame(3)">Hard (Level 3)</button>
+            </div>
+            <button onclick="logout()">Logout</button>
+        </div>
+
+        <div id="gameArea" style="display:none;">
+            <div class="game-stats">
+                <span id="scoreDisplay">Score: 0</span>
+                <span id="difficultyDisplay" class="difficulty-indicator">Level: 1</span>
+            </div>
+            <p id="numberDisplay"></p>
+            <div id="gameInputContainer">
+                <input type="number" id="userGuess" placeholder="Enter your guess">
+                <button onclick="checkAnswer()">Submit</button>
+                <button onclick="skipQuestion()" class="skip-button">Skip</button>
+            </div>
+            <div id="correctAnswerDisplay"></div>
+            <button onclick="returnToMenu()">Back to Menu</button>
+            <div id="message"></div>
+        </div>
+    </div>
+
+    <script>
+        let currentGameMode = '';
+        let currentNumber = 0;
+        let score = 0;
+        let difficulty = 1;
+        let lastNumber = null;
+
+        function authenticate() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const loginMessage = document.getElementById('loginMessage');
+
+            if (username === 'Zain' && password === '10456') {
+                document.getElementById('loginContainer').style.display = 'none';
+                document.getElementById('gameContainer').style.display = 'block';
+                loginMessage.textContent = 'Login successful!';
+                loginMessage.style.color = 'green';
+            } else {
+                loginMessage.textContent = 'Invalid username or password';
+                loginMessage.style.color = 'red';
+            }
+        }
+
+        function prepareGameMode(mode) {
+            currentGameMode = mode;
+            document.getElementById('difficultySelect').style.display = 'flex';
+        }
+
+        function startGame(selectedDifficulty) {
+            // Reset game state
+            score = 0;
+            difficulty = selectedDifficulty;
+            lastNumber = null;
+            
+            // Hide difficulty selection and show game area
+            document.getElementById('difficultySelect').style.display = 'none';
+            document.getElementById('gameMenu').style.display = 'none';
+            document.getElementById('gameArea').style.display = 'block';
+            
+            // Update initial score and difficulty display
+            updateScoreAndDifficulty();
+            
+            // Generate first question
+            generateQuestion();
+        }
+
+        function generateQuestion() {
+            // Increase number range based on difficulty
+            const maxNumber = 10 * difficulty;
+            
+            // Ensure the new number is different from the previous one
+            let newNumber;
+            do {
+                newNumber = Math.floor(Math.random() * maxNumber);
+            } while (newNumber === lastNumber);
+            
+            // Update current and last number
+            lastNumber = currentNumber;
+            currentNumber = newNumber;
+            
+            const numberDisplay = document.getElementById('numberDisplay');
+            const message = document.getElementById('message');
+            
+            if (currentGameMode === 'cube') {
+                numberDisplay.textContent = `The number is: ${currentNumber}`;
+                message.textContent = '';
+            } else {
+                const cube = Math.pow(currentNumber, 3);
+                numberDisplay.textContent = `The cube of a number is: ${cube}`;
+                message.textContent = '';
+            }
+            
+            document.getElementById('userGuess').value = '';
+        }
+
+        function updateScoreAndDifficulty() {
+            document.getElementById('scoreDisplay').textContent = `Score: ${score.toFixed(1)}`;
+            document.getElementById('difficultyDisplay').textContent = `Level: ${difficulty}`;
+        }
+
+        function skipQuestion() {
+            // Reduce score by 0.5 points
+            score = Math.max(0, score - 0.5);
+            
+            // Update score display
+            updateScoreAndDifficulty();
+            
+            // Generate a new question
+            generateQuestion();
+            
+            // Show skip message
+            const message = document.getElementById('message');
+            message.textContent = 'Question skipped. -0.5 points';
+            message.style.color = 'orange';
+        }
+
+        function checkAnswer() {
+            const userGuess = parseInt(document.getElementById('userGuess').value);
+            const message = document.getElementById('message');
+            const correctAnswerDisplay = document.getElementById('correctAnswerDisplay');
+            
+            if (isNaN(userGuess)) {
+                message.textContent = 'Please enter a valid number';
+                message.style.color = 'red';
+                return;
+            }
+
+            let isCorrect = false;
+            let correctAnswer;
+            if (currentGameMode === 'cube') {
+                correctAnswer = Math.pow(currentNumber, 3);
+                isCorrect = userGuess === correctAnswer;
+                
+                if (isCorrect) {
+                    message.textContent = 'Correct! Well done.';
+                    message.style.color = 'green';
+                } else {
+                    message.textContent = 'Wrong answer!';
+                    message.style.color = 'red';
+                    correctAnswerDisplay.textContent = `Correct answer: ${correctAnswer}`;
+                    document.getElementById('gameInputContainer').classList.add('hidden');
+                }
+            } else {
+                correctAnswer = currentNumber;
+                isCorrect = userGuess === correctAnswer;
+                
+                if (isCorrect) {
+                    message.textContent = 'Correct! Well done.';
+                    message.style.color = 'green';
+                } else {
+                    message.textContent = 'Wrong answer!';
+                    message.style.color = 'red';
+                    correctAnswerDisplay.textContent = `Correct answer: ${correctAnswer}`;
+                    document.getElementById('gameInputContainer').classList.add('hidden');
+                }
+            }
+
+            // Update score and difficulty
+            if (isCorrect) {
+                score++;
+                
+                // Increase difficulty every 3 correct answers within the selected initial difficulty
+                if (score % 3 === 0) {
+                    difficulty++;
+                }
+                
+                updateScoreAndDifficulty();
+                
+                // Automatically generate next question after a short delay
+                setTimeout(generateQuestion, 1500);
+            } else {
+                // Show correct answer for 3 seconds before next question
+                setTimeout(generateQuestion, 3000);
+            }
+        }
+
+        function returnToMenu() {
+            document.getElementById('gameArea').style.display = 'none';
+            document.getElementById('gameMenu').style.display = 'block';
+            document.getElementById('difficultySelect').style.display = 'none';
+        }
+
+        function logout() {
+            document.getElementById('gameContainer').style.display = 'none';
+            document.getElementById('loginContainer').style.display = 'block';
+            document.getElementById('username').value = '';
+            document.getElementById('password').value = '';
+        }
+    </script>
+</body>
+  </html>
